@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import '../water_progress.dart'; // Import the WaterProgressPainter
+import 'history_screen.dart'; // Import the HistoryScreen
+// Import the SettingsScreen
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -73,16 +75,41 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         ],
       ),
       bottomNavigationBar: CurvedNavigationBar(
-        items: [
-          Icon(Icons.home),
-          Icon(Icons.history),
-        ],
-        onTap: (index) {
-          // Handle navigation
-        },
+        backgroundColor: Colors.blue,
+        color: Colors.white,
+        buttonBackgroundColor: Colors.blue,
+        height: 60.0,
+        items: _buildNavigationBarItems(),
+        onTap: (index) => _handleBottomNavigationBarTap(index),
+        index: 0,
+        animationDuration: Duration(milliseconds: 200),
+        animationCurve: Curves.easeInOut,
       ),
     );
   }
+
+  List<Widget> _buildNavigationBarItems() {
+    return [
+      Icon(Icons.home, size: 30),
+      Icon(Icons.history, size: 30),
+      Icon(Icons.settings, size: 30),
+    ];
+  }
+
+ void _handleBottomNavigationBarTap(int index) {
+  // Handle navigation
+  if (index == 1) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => HistoryScreen()),
+    );
+  } else if (index == 2) {
+    // Use _animationController.animateTo to smoothly animate to the Settings tab
+    _animationController.animateTo(2);
+  }
+}
+
+
 
   Widget _buildWelcomeCard() {
     return Card(
