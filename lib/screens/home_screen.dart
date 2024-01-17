@@ -1,10 +1,8 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
-import '../water_progress.dart'; // Import the WaterProgressPainter
 import 'history_screen.dart'; // Import the HistoryScreen
-// Import the SettingsScreen
+import 'water_progress.dart'; // Import the WaterProgressPainter
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -12,6 +10,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _opacityAnimation;
+
   double targetWater = 3000.0;
   double consumedWater = 2000.0;
   double currentIntake = 0.0;
@@ -23,9 +24,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     'Cheers to a refreshing day!',
   ];
   int currentMessageIndex = 0;
-
-  late AnimationController _animationController;
-  late Animation<double> _opacityAnimation;
 
   @override
   void initState() {
@@ -51,6 +49,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     double percentage = consumedWater / targetWater;
 
@@ -64,9 +68,23 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          FadeTransition(
-            opacity: _opacityAnimation,
-            child: _buildWelcomeCard(),
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.blue,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 10.0,
+                  offset: Offset(0, 5),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: FadeTransition(
+              opacity: _opacityAnimation,
+              child: _buildWelcomeCard(),
+            ),
           ),
           _buildWaterProgress(percentage),
           _buildWaterInfo(percentage),
@@ -96,34 +114,27 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     ];
   }
 
- void _handleBottomNavigationBarTap(int index) {
-  // Handle navigation
-  if (index == 1) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => HistoryScreen()),
-    );
-  } else if (index == 2) {
-    // Use _animationController.animateTo to smoothly animate to the Settings tab
-    _animationController.animateTo(2);
+  void _handleBottomNavigationBarTap(int index) {
+    // Handle navigation
+    if (index == 1) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => HistoryScreen()),
+      );
+    } else if (index == 2) {
+      // Use _animationController.animateTo to smoothly animate to the Settings tab
+      _animationController.animateTo(2);
+    }
   }
-}
-
-
 
   Widget _buildWelcomeCard() {
-    return Card(
-      color: Colors.blue,
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Container(
-        width: 200.0,
-        height: 100.0,
-        child: Padding(
-          padding: const EdgeInsets.all(15.0),
-          child: Text(
-            welcomeMessages[currentMessageIndex],
-            style: TextStyle(fontSize: 18.0, color: Colors.white),
-          ),
+    return Container(
+      width: double.infinity,
+      child: Padding(
+        padding: const EdgeInsets.all(15.0),
+        child: Text(
+          welcomeMessages[currentMessageIndex],
+          style: TextStyle(fontSize: 18.0, color: Colors.white),
         ),
       ),
     );

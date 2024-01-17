@@ -1,6 +1,4 @@
-// TODO Implement this library.
-// water_progress.dart
-
+import 'dart:math';
 import 'package:flutter/material.dart';
 
 class WaterProgressPainter extends CustomPainter {
@@ -11,34 +9,47 @@ class WaterProgressPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    Paint bgPaint = Paint()
-      ..color = Colors.grey.withOpacity(0.3)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 20.0;
+    Paint backgroundPaint = Paint()
+      ..color = Colors.grey[300]!
+      ..style = PaintingStyle.fill;
 
     Paint progressPaint = Paint()
       ..color = Colors.blue
+      ..style = PaintingStyle.fill;
+
+    double radius = size.width / 2;
+    double centerX = size.width / 2;
+    double centerY = size.height / 2;
+
+    // Draw background circle
+    canvas.drawCircle(Offset(centerX, centerY), radius, backgroundPaint);
+
+    // Draw progress arc
+    double startAngle = -pi / 2;
+    double sweepAngle = 2 * pi * percentage;
+
+    canvas.drawArc(
+      Rect.fromCircle(center: Offset(centerX, centerY), radius: radius),
+      startAngle,
+      sweepAngle,
+      true,
+      progressPaint,
+    );
+
+    // Draw target line
+    Paint targetLinePaint = Paint()
+      ..color = Colors.red
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 20.0;
+      ..strokeWidth = 2.0;
 
-    Rect rect = Rect.fromCircle(
-      center: Offset(size.width / 2, size.height / 2),
-      radius: size.width / 2 - 10,
+    double targetAngle = 2 * pi * target;
+    canvas.drawArc(
+      Rect.fromCircle(center: Offset(centerX, centerY), radius: radius),
+      startAngle,
+      targetAngle,
+      false,
+      targetLinePaint,
     );
-
-    canvas.drawCircle(rect.center, rect.width / 2, bgPaint);
-    double sweepAngle = 360 * percentage;
-    canvas.drawArc(rect, -90.0 * (3.1415926535 / 180), sweepAngle * (3.1415926535 / 180), false, progressPaint);
-
-    TextPainter textPainter = TextPainter(
-      text: TextSpan(
-        text: '${(percentage * target).toInt()}ml / ${target.toInt()}ml',
-        style: TextStyle(color: Colors.black, fontSize: 16.0),
-      ),
-      textDirection: TextDirection.ltr,
-    );
-    textPainter.layout(minWidth: 0, maxWidth: size.width);
-    textPainter.paint(canvas, Offset(size.width / 2 - textPainter.width / 2, size.height / 2 - textPainter.height / 2));
   }
 
   @override
