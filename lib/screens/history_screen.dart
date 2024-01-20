@@ -5,6 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
 class HistoryScreen extends StatelessWidget {
+    final List<Map<String, dynamic>> intakeHistory; // Add this line
+
+  // Constructor that takes the intakeHistory parameter
+  const HistoryScreen({Key? key, required this.intakeHistory}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -182,3 +187,33 @@ class HistoryScreen extends StatelessWidget {
     );
   }
 }
+Widget _buildHistoricalIntakeChart() {
+  return Container(
+    height: 200.0,
+    child: BarChart(
+      BarChartData(
+        titlesData: FlTitlesData(
+          leftTitles: SideTitles(showTitles: true),
+          bottomTitles: SideTitles(showTitles: true),
+        ),
+        borderData: FlBorderData(show: true),
+        gridData: FlGridData(show: true),
+        barGroups: [
+          BarChartGroupData(
+            x: 0,
+            barRods: [BarChartRodData(y: 5000)],
+            showingTooltipIndicators: [0],
+          ),
+          BarChartGroupData(
+            x: 1,
+            barRods: [BarChartRodData(y: 8000)],
+            showingTooltipIndicators: [0],
+          ),
+          // ... add more entries for each day
+        ],
+      ),
+    ),
+  );
+}
+
+

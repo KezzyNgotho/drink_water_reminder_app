@@ -56,7 +56,7 @@ late AnimationController _animationController;
   if (index == 1) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => HistoryScreen()),
+      MaterialPageRoute(builder: (context) => HistoryScreen(intakeHistory: [],)),
     );
   } else if (index == 0) {
     // Use _animationController.animateTo to smoothly animate to the Settings tab

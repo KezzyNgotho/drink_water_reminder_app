@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
-import 'history_screen.dart'; // Import the HistoryScreen
-import 'water_progress.dart'; // Import the WaterProgressPainter
+import 'history_screen.dart';
+import 'water_progress.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -40,7 +40,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
     );
 
-    // Start a timer to change the message every 5 seconds
     Timer.periodic(Duration(seconds: 5), (timer) {
       _changeWelcomeMessage();
     });
@@ -61,36 +60,23 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: Text('Welcome back!'),
-        toolbarHeight: 70.0,
+        title: Text('Water Reminder'),
+        toolbarHeight: 30.0,
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.blue,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  blurRadius: 10.0,
-                  offset: Offset(0, 5),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: FadeTransition(
-              opacity: _opacityAnimation,
-              child: _buildWelcomeCard(),
-            ),
-          ),
-          _buildWaterProgress(percentage),
-          _buildWaterInfo(percentage),
-          _buildButtons(),
-          _buildIntakeHistoryCard(),
-        ],
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.max,
+          textDirection: TextDirection.ltr,
+          verticalDirection: VerticalDirection.down,
+          children: [
+            _buildWaterProgress(percentage),
+            _buildWaterInfo(percentage),
+            _buildButtons(),
+            _buildIntakeHistoryCard(),
+          ],
+        ),
       ),
       bottomNavigationBar: CurvedNavigationBar(
         backgroundColor: Colors.blue,
@@ -115,29 +101,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   void _handleBottomNavigationBarTap(int index) {
-    // Handle navigation
     if (index == 1) {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => HistoryScreen()),
+        MaterialPageRoute(builder: (context) => HistoryScreen(intakeHistory: intakeHistory)),
       );
     } else if (index == 2) {
-      // Use _animationController.animateTo to smoothly animate to the Settings tab
       _animationController.animateTo(2);
     }
-  }
-
-  Widget _buildWelcomeCard() {
-    return Container(
-      width: double.infinity,
-      child: Padding(
-        padding: const EdgeInsets.all(15.0),
-        child: Text(
-          welcomeMessages[currentMessageIndex],
-          style: TextStyle(fontSize: 18.0, color: Colors.white),
-        ),
-      ),
-    );
   }
 
   Widget _buildWaterProgress(double percentage) {
@@ -152,7 +123,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildWaterInfo(double percentage) {
+ Widget _buildWaterInfo(double percentage) {
+    String nextIntakeTime = _calculateNextIntakeTime();
+    double nextIntakeAmount = targetWater * 0.08; // You can adjust this percentage as needed
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 20.0),
       child: Row(
@@ -161,10 +135,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           _buildInfoColumn(Icons.local_drink, 'Should Take', (percentage * targetWater).toInt().toString() + 'ml'),
           SizedBox(width: 40.0),
           _buildInfoColumn(Icons.local_bar, 'Water Intake', currentIntake.toInt().toString() + 'ml'),
+          SizedBox(width: 40.0),
+          _buildInfoColumn(Icons.access_time, 'Next Intake', '$nextIntakeTime\n${nextIntakeAmount.toInt()}ml'),
         ],
       ),
     );
   }
+
+
+
 
   Widget _buildInfoColumn(IconData icon, String title, String value) {
     return Column(
@@ -177,60 +156,82 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        ElevatedButton(
-          onPressed: () => _showIntakeConfirmationDialog(),
-          child: Text('Confirm Intake'),
-        ),
-        SizedBox(width: 20.0),
-        IconButton(
-          icon: Icon(Icons.history),
-          onPressed: () => _showTodayIntakeHistoryDialog(),
-          tooltip: "Today's Intake History",
-        ),
-        SizedBox(width: 20.0),
-        ElevatedButton(
-          onPressed: () => _recordIntakeManually(),
-          child: Text('Record Manually'),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildIntakeHistoryCard() {
-    return Card(
-      elevation: 5.0,
-      margin: const EdgeInsets.all(10.0),
-      child: Padding(
-        padding: const EdgeInsets.all(15.0),
-        child: Column(
-          children: [
-            Text(
-              "Today's Intake History",
-              style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10.0),
-            if (intakeHistory.isNotEmpty)
-              ListView.builder(
-                shrinkWrap: true,
-                itemCount: intakeHistory.length,
-                itemBuilder: (context, index) {
-                  var entry = intakeHistory[index];
-                  return ListTile(
-                    title: Text('Intake: ${entry['intake'].toInt()}ml'),
-                    subtitle: Text('Time: ${entry['time']}'),
-                  );
-                },
-              )
-            else
-              Text('No intake recorded yet.'),
-          ],
-        ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          ElevatedButton(
+            onPressed: () => _showIntakeConfirmationDialog(),
+            child: Text('Confirm Intake'),
+          ),
+        ],
       ),
     );
   }
+Widget _buildIntakeHistoryCard() {
+  return Card(
+    elevation: 5.0,
+    margin: const EdgeInsets.all(10.0),
+    color: Colors.lightBlueAccent, // Adjust the card color
+    child: Padding(
+      padding: const EdgeInsets.all(15.0),
+      child: Column(
+        children: [
+          Text(
+            "Today's Intake History",
+            style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold, color: Colors.white), // Adjust text color
+          ),
+          const SizedBox(height: 10.0),
+          if (intakeHistory.isNotEmpty)
+            Container(
+              child: Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                children: [
+                  for (int i = 0; i < intakeHistory.length; i++)
+                    Container(
+                      width: MediaQuery.of(context).size.width / 3 - 20, // Adjust the width of each column
+                      margin: EdgeInsets.only(bottom: 10.0),
+                      child: ListTile(
+                        title: Text('Intake: ${intakeHistory[i]['intake'].toInt()}ml'),
+                        subtitle: Text('Time: ${intakeHistory[i]['time']}'),
+                      ),
+                    ),
+                ],
+              ),
+            )
+          else
+            Text('No intake recorded yet.', style: TextStyle(color: const Color.fromARGB(255, 194, 35, 35))), // Adjust text color
+          const SizedBox(height: 10.0),
+          ElevatedButton(
+            onPressed: () => _recordUnrecordedIntake(context),
+            child: Text('Fill Unrecorded Intake'),
+            style: ElevatedButton.styleFrom(
+              primary: Colors.white, // Adjust button background color
+              onPrimary: Colors.blue, // Adjust button text color
+              padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0), // Adjust button padding
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+
+Widget _buildIntakeColumn(List<Map<String, dynamic>> intakeHistory, int columnIndex) {
+  return Expanded(
+    child: Column(
+      children: [
+        for (int i = columnIndex * 3; i < (columnIndex + 1) * 3 && i < intakeHistory.length; i++)
+          ListTile(
+            title: Text('Intake: ${intakeHistory[i]['intake'].toInt()}ml'),
+            subtitle: Text('Time: ${intakeHistory[i]['time']}'),
+          ),
+      ],
+    ),
+  );
+}
 
   void _showIntakeConfirmationDialog() {
     showDialog(
@@ -242,15 +243,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           actions: [
             TextButton(
               onPressed: () {
-                setState(() {
-                  consumedWater += currentIntake;
-                  intakeHistory.add({
-                    'label': 'Confirmed Intake',
-                    'intake': currentIntake,
-                    'time': _getCurrentTime(),
-                  });
-                  currentIntake = 0.0;
-                });
+                _confirmIntake();
                 Navigator.pop(context);
               },
               child: Text('Yes'),
@@ -266,6 +259,119 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       },
     );
   }
+void _confirmIntake() {
+  setState(() {
+    consumedWater += currentIntake;
+    intakeHistory.add({
+      'label': 'Confirmed Intake',
+      'intake': currentIntake,
+      'time': _getCurrentTime(),
+    });
+    currentIntake = 0.0;
+
+    // Check if it's time for the next intake
+    if (_isTimeForNextIntake()) {
+      _showNextIntakeReminderDialog();
+    }
+  });
+}
+
+void _recordUnrecordedIntake(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      TextEditingController timeController = TextEditingController();
+      TextEditingController intakeController = TextEditingController();
+
+      return AlertDialog(
+        title: Text('Record Unrecorded Intake'),
+        content: Container(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Select the time and amount you took water:'),
+              SizedBox(height: 10.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: TextField(
+                      controller: timeController,
+                      readOnly: true,
+                      decoration: InputDecoration(
+                        labelText: 'Time',
+                        hintText: 'Select time',
+                        suffixIcon: Icon(Icons.access_time),
+                      ),
+                      onTap: () async {
+                        TimeOfDay? selectedTime = await showTimePicker(
+                          context: context,
+                          initialTime: TimeOfDay.now(),
+                        );
+                        if (selectedTime != null) {
+                          timeController.text =
+                              '${selectedTime.hour}:${selectedTime.minute}';
+                        }
+                      },
+                    ),
+                  ),
+                  SizedBox(width: 10.0),
+                  Expanded(
+                    flex: 1,
+                    child: TextField(
+                      controller: intakeController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Amount (ml)',
+                        hintText: 'Enter amount',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              double unrecordedIntake = double.parse(intakeController.text);
+              String selectedTime = timeController.text.isNotEmpty
+                  ? timeController.text
+                  : _getCurrentTime();
+
+              setState(() {
+                consumedWater += unrecordedIntake;
+                intakeHistory.add({
+                  'label': 'Unrecorded Intake',
+                  'intake': unrecordedIntake,
+                  'time': selectedTime,
+                });
+
+                // Check if it's time for the next intake
+                if (_isTimeForNextIntake()) {
+                  _showNextIntakeReminderDialog();
+                }
+              });
+
+              Navigator.pop(context);
+            },
+            child: Text('Record'),
+          ),
+        ],
+      );
+    },
+  );
+}
 
   void _showTodayIntakeHistoryDialog() {
     showDialog(
@@ -311,17 +417,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           actions: [
             TextButton(
               onPressed: () {
-                if (controller.text.isNotEmpty) {
-                  double manuallyRecordedIntake = double.parse(controller.text);
-                  setState(() {
-                    consumedWater += manuallyRecordedIntake;
-                    intakeHistory.add({
-                      'label': 'Manually Recorded',
-                      'intake': manuallyRecordedIntake,
-                      'time': _getCurrentTime(),
-                    });
-                  });
-                }
+                _recordManually(controller);
                 Navigator.pop(context);
               },
               child: Text('Record'),
@@ -338,6 +434,98 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
+  void _recordManually(TextEditingController controller) {
+    if (controller.text.isNotEmpty) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          TextEditingController timeController = TextEditingController();
+          return AlertDialog(
+            title: Text('Record Water Intake'),
+            content: Container(
+              width: double.maxFinite,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Select the time and amount you took water:'),
+                  SizedBox(height: 10.0),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: TextField(
+                          controller: timeController,
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            labelText: 'Time',
+                            hintText: 'Select time',
+                            suffixIcon: Icon(Icons.access_time),
+                          ),
+                          onTap: () async {
+                            TimeOfDay? selectedTime = await showTimePicker(
+                              context: context,
+                              initialTime: TimeOfDay.now(),
+                            );
+                            if (selectedTime != null) {
+                              timeController.text =
+                                  '${selectedTime.hour}:${selectedTime.minute}';
+                            }
+                          },
+                        ),
+                      ),
+                      SizedBox(width: 10.0),
+                      Expanded(
+                        flex: 1,
+                        child: TextField(
+                          controller: controller,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            labelText: 'Amount (ml)',
+                            hintText: 'Enter amount',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  double manuallyRecordedIntake = double.parse(controller.text);
+                  String selectedTime = timeController.text.isNotEmpty
+                      ? timeController.text
+                      : _getCurrentTime();
+
+                  setState(() {
+                    consumedWater += manuallyRecordedIntake;
+                    intakeHistory.add({
+                      'label': 'Manually Recorded',
+                      'intake': manuallyRecordedIntake,
+                      'time': selectedTime,
+                    });
+                  });
+
+                  Navigator.pop(context);
+                },
+                child: Text('Record'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
   String _getCurrentTime() {
     var now = DateTime.now();
     return '${now.hour}:${now.minute}';
@@ -345,8 +533,148 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   void _changeWelcomeMessage() {
     setState(() {
-      // Change the welcome message to the next one
       currentMessageIndex = (currentMessageIndex + 1) % welcomeMessages.length;
     });
+  }
+/*
+ void _recordUnrecordedIntake(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        TextEditingController timeController = TextEditingController();
+        TextEditingController intakeController = TextEditingController();
+
+        return AlertDialog(
+          title: Text('Record Unrecorded Intake'),
+          content: Container(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Select the time and amount you took water:'),
+                SizedBox(height: 10.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: TextField(
+                        controller: timeController,
+                        readOnly: true,
+                        decoration: InputDecoration(
+                          labelText: 'Time',
+                          hintText: 'Select time',
+                          suffixIcon: Icon(Icons.access_time),
+                        ),
+                        onTap: () async {
+                          TimeOfDay? selectedTime = await showTimePicker(
+                            context: context,
+                            initialTime: TimeOfDay.now(),
+                          );
+                          if (selectedTime != null) {
+                            timeController.text =
+                                '${selectedTime.hour}:${selectedTime.minute}';
+                          }
+                        },
+                      ),
+                    ),
+                    SizedBox(width: 10.0),
+                    Expanded(
+                      flex: 1,
+                      child: TextField(
+                        controller: intakeController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: 'Amount (ml)',
+                          hintText: 'Enter amount',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                double unrecordedIntake = double.parse(intakeController.text);
+                String selectedTime = timeController.text.isNotEmpty
+                    ? timeController.text
+                    : _getCurrentTime();
+
+                setState(() {
+                  consumedWater += unrecordedIntake;
+                  intakeHistory.add({
+                    'label': 'Unrecorded Intake',
+                    'intake': unrecordedIntake,
+                    'time': selectedTime,
+                  });
+                });
+
+                Navigator.pop(context);
+              },
+              child: Text('Record'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+*/
+
+
+
+
+
+
+
+
+
+
+ // New method to calculate next intake time
+  String _calculateNextIntakeTime() {
+    var now = DateTime.now();
+    var nextIntakeTime = now.add(Duration(hours: 2)); // For example, setting the next intake time to 2 hours from now
+    return '${nextIntakeTime.hour}:${nextIntakeTime.minute}';
+  }
+
+  // New method to determine if it's time for the next intake
+  bool _isTimeForNextIntake() {
+    var now = DateTime.now();
+    var lastIntakeTime = intakeHistory.isNotEmpty ? intakeHistory.last['time'] : DateTime.now();
+    var timeSinceLastIntake = now.difference(lastIntakeTime);
+
+    // For example, check if it's been 2 hours since the last intake
+    return timeSinceLastIntake.inHours >= 2;
+  }
+
+  // New method to show a reminder dialog for the next intake
+  void _showNextIntakeReminderDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Stay Hydrated!'),
+          content: Text('It\'s time for your next water intake.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
